@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>tfprobably correct: Adding uncertainty to deep learning with TensorFlow Probability</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Sigrid Keydana" />
+    <link rel="stylesheet" href="theme/rstudio.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# tfprobably correct: Adding uncertainty to deep learning with TensorFlow Probability
+### Sigrid Keydana
+### WhyR 2019
+
+---
+
+
+class: inverse, middle, center
+
+# Neural networks are awesome ...
+
+
+---
+
+# Deep learning yields excellent results in e.g. 
+
+&lt;br /&gt;
+
+- Image recognition (classification, segmentation, object detection)
+
+- Natural language processing (language models, translation, generation)
+
+- Domain modeling (embeddings)
+
+- Entity generation ("fakes"): Faces, animals, scenes...
+
+- Tasks involving tabular data (e.g., recommender systems)
+
+- Playing games (deep reinforcement learning)
+
+---
+
+class: inverse, middle, center
+
+# So what are we missing?
+
+---
+
+# Networks output _point estimates_
+
+&lt;br /&gt;
+
+
+- A single numeric prediction 
+
+- A single segmentation mask
+
+- A single translation
+
+- A single embedding
+
+&lt;br /&gt;
+ 
+But wait ... aren't there probabilities in there, _somewhere_?
+
+---
+# Let's see an example!
+
+
+```r
+library(magick)
+```
+
+```
+## Linking to ImageMagick 6.9.10.28
+## Enabled features: cairo, fontconfig, freetype, fftw, ghostscript, lcms, pango, rsvg, webp, x11
+## Disabled features:
+```
+
+```r
+# Attribution: Ben Tubby [CC BY 2.0 (https://creativecommons.org/licenses/by/2.0)]
+# https://upload.wikimedia.org/wikipedia/commons/3/30/Falkland_Islands_Penguins_35.jpg
+path &lt;- "penguin1.jpg" 
+image_read(path) %&gt;% image_resize("160")
+```
+
+&lt;img src="tfprobably-correct_files/figure-html/unnamed-chunk-1-1.png" width="213" /&gt;
+
+---
+# Let's ask the network ...
+
+
+```r
+library(tensorflow)
+library(keras)
+
+model &lt;- application_mobilenet_v2()
+image &lt;- # do some preprocessing ...
+probs &lt;- model %&gt;% predict(image)
+imagenet_decode_predictions(probs)
+```
+
+```
+  class_name class_description        score
+1  n02056570      king_penguin 0.9899597168
+2  n01847000             drake 0.0011793933
+3  n01798484   prairie_chicken 0.0002387235
+4  n02058221         albatross 0.0002117234
+5  n02071294      killer_whale 0.0001432021
+```
+
+---
+# Let's do another one
+
+
+```r
+# Attribution: M. Murphy [Public domain]
+# https://upload.wikimedia.org/wikipedia/commons/2/22/RoyalPenguins3.JPG
+path &lt;- "penguin2.jpg" 
+image_read(path) %&gt;% image_resize("180")
+```
+
+&lt;img src="tfprobably-correct_files/figure-html/unnamed-chunk-3-1.png" width="240" /&gt;
+
+---
+# So?
+
+
+```r
+probs &lt;- model %&gt;% predict(image)
+imagenet_decode_predictions(probs)
+```
+
+&lt;br /&gt;
+
+```
+  class_name class_description      score
+1  n02051845           pelican 0.24614049
+2  n02009912    American_egret 0.18564136
+3  n02058221         albatross 0.06848499
+4  n02012849             crane 0.04572001
+5  n02009229 little_blue_heron 0.03902744
+```
+
+---
+# Stepping back: What's a neural network?
+
+
+&lt;img src="playground.png" width = "70%"/&gt;
+
+---
+# Zooming in: Weights and activations
+
+&lt;figure&gt;
+    &lt;img src="perceptron.png" width = "60%"&gt;
+    &lt;figcaption&gt;Source: https://en.wikipedia.org/wiki/Perceptron&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+
+---
+
+# Regression with Keras
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 32, activation = "relu", input_shape = 7) %&gt;%
+  # default activation = linear
+  layer_dense(units = 1)
+```
+
+&lt;figure&gt;
+    &lt;img src="relu.png" width = "60%"&gt;
+    &lt;figcaption&gt;&lt;b&gt;ReLU&lt;/b&gt; activation&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+
+---
+
+# (Binary) Classification with Keras
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 32, activation = "relu", input_shape = 7) %&gt;%
+  layer_dense(units = 1, activation = "sigmoid")
+```
+
+&lt;figure&gt;
+    &lt;img src="sigmoid.png" width = "60%"&gt;
+    &lt;figcaption&gt;&lt;b&gt;Sigmoid&lt;/b&gt; activation&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+---
+
+# (Multiple) Classification with Keras
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 32, activation = "relu", input_shape = 7) %&gt;%
+  layer_dense(units = 10, activation = "softmax")
+```
+
+&lt;figure&gt;
+    &lt;img src="softmax_pre.png" style = "float:left;" width= "50%"&gt;
+&lt;/figure&gt;
+&lt;figure&gt;
+    &lt;img src="softmax_post.png" style = "float:right;" width= "50%"&gt;
+&lt;/figure&gt;
+
+Before and after __softmax__ activation.
+
+---
+
+# So our "probability" is just a maximum likelihood estimate ...
+
+&lt;br /&gt;
+
+... how can we make this probabilistic?
+
+---
+class: inverse, middle, center
+
+# Bayesian networks 
+
+---
+
+# Put distributions over the network's weights
+
+
+&lt;figure&gt;
+    &lt;img src="weight_uncertainty.png" width = "120%"&gt;
+    &lt;figcaption&gt;Blundell et al. (2015): Weight Uncertainty in Neural Networks&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+
+---
+# Yeah, but how?
+
+&lt;br /&gt;
+
+[TensorFlow Probability](https://www.tensorflow.org/probability/) (Python library on top of TensorFlow)
+
+[tfprobability](https://rstudio.github.io/tfprobability/) (R package)
+
+&lt;br /&gt;
+
+
+```r
+devtools::install_github("rstudio/tfprobability")
+
+library(tensorflow)
+install_tensorflow()
+```
+
+
+---
+# tfprobability (1): Basic building blocks
+
+#### Distributions
+
+
+```r
+d &lt;- tfd_binomial(total_count = 7, probs = 0.3)
+d %&gt;% tfd_mean()
+#&gt; tf.Tensor(2.1000001, shape=(), dtype=float32)
+d %&gt;% tfd_variance()
+#&gt; tf.Tensor(1.47, shape=(), dtype=float32)
+d %&gt;% tfd_log_prob(2.3)
+#&gt; tf.Tensor(-1.1914139, shape=(), dtype=float32)
+```
+
+#### Bijectors
+
+
+```r
+b &lt;- tfb_affine_scalar(shift = 3.33, scale = 0.5)
+x &lt;- c(100, 1000, 10000)
+b %&gt;% tfb_forward(x)
+#&gt; tf.Tensor([  53.33  503.33 5003.33], shape=(3,), dtype=float32)
+```
+
+
+
+---
+# tfprobability (2): Higher-level modules
+
+&lt;br /&gt;
+
+- Keras layers 
+
+- Markov Chain Monte Carlo (Hamiltonian Monte Carlo, NUTS)
+
+- Variational inference
+
+- State space models
+
+- GLMs
+
+---
+class: inverse, middle, center
+
+# How does that help us?
+
+
+---
+# With TFP, neural network layers can be _distributions_
+
+&lt;br /&gt;
+A network that has a multivariate normal distribution as output
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = params_size_multivariate_normal_tri_l(d)) %&gt;%
+  layer_multivariate_normal_tri_l(event_size = d)
+
+log_loss &lt;- function (y, model) - (model %&gt;% tfd_log_prob(y))
+
+model %&gt;% compile(optimizer = "adam", loss = log_loss)
+
+model %&gt;% fit(
+  x,
+  y,
+  batch_size = 100,
+  epochs = 1,
+  steps_per_epoch = 10
+)
+```
+
+---
+# More distribution layers
+
+&lt;figure&gt;
+    &lt;img src="distribution_layers.png" width = "100%"&gt;
+    &lt;figcaption&gt;Complete list: &lt;a href="https://rstudio.github.io/tfprobability/reference/index.html#section-keras-layers-distribution-layers"&gt;Distribution layers&lt;/a&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+---
+# Outputting a distribution: Aleatoric uncertainty
+
+
+Instead of a single unit (of a _dense_ layer), we output a __normal distribution__:
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 8, activation = "relu") %&gt;%
+  layer_dense(units = 2, activation = "linear") %&gt;%
+  layer_distribution_lambda(function(x)
+    tfd_normal(loc = x[, 1, drop = FALSE],
+               scale = 1e-3 + tf$math$softplus(x[, 2, drop = FALSE])
+               )
+  )
+
+negloglik &lt;- function(y, model) - (model %&gt;% tfd_log_prob(y))
+model %&gt;% compile(
+  optimizer = optimizer_adam(lr = 0.01),
+  loss = negloglik
+)
+model %&gt;% fit(x, y, epochs = 1000)
+```
+
+---
+# Aleatoric uncertainty ~ learned spread in the data
+
+
+```r
+yhat &lt;- model(tf$constant(x_test))
+mean &lt;- yhat %&gt;% tfd_mean()
+sd &lt;- yhat %&gt;% tfd_stddev()
+```
+
+&lt;figure&gt;
+    &lt;img src="aleatoric.png" width = "80%"&gt;
+&lt;/figure&gt;
+
+---
+# Placing a distribution over the weights: Epistemic uncertainty
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense_variational(
+    units = 1,
+    make_posterior_fn = posterior_mean_field,
+    make_prior_fn = prior_trainable,
+    kl_weight = 1 / n
+  ) %&gt;%
+  layer_distribution_lambda(
+    function(x) tfd_normal(loc = x, scale = 1)
+    )
+
+negloglik &lt;- function(y, model) - (model %&gt;% tfd_log_prob(y))
+model %&gt;% compile(
+  optimizer = optimizer_adam(lr = 0.1),
+  loss = negloglik
+)
+model %&gt;% fit(x, y, epochs = 1000)
+```
+
+---
+# Epistemic uncertainty ~ model uncertainty
+
+Every prediction uses a different _sample from the weight distributions_!
+
+
+```r
+yhats &lt;- purrr::map(1:100, function(x) model(tf$constant(x_test)))
+```
+
+&lt;figure&gt;
+    &lt;img src="epistemic.png" width = "80%"&gt;
+&lt;/figure&gt;
+
+---
+# Posterior weights are computed using variational inference
+
+&lt;figure&gt;
+    &lt;img src="blei_vi.png" width = "80%"&gt;
+    &lt;figcaption&gt;Source: &lt;a href="https://media.nips.cc/Conferences/2016/Slides/6199-Slides.pdf"&gt;David Blei, Rajesh Ranganath, Shakir Mohamed: Variational Inference:Foundations and Modern Methods. NIPS 2016 Tutorial·December 5, 2016.&lt;/a&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+---
+# Epistemic and aleatoric uncertainty in one model
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_dense_variational(
+    units = 2,
+  ) %&gt;%
+  layer_distribution_lambda(function(x)
+    tfd_normal(loc = x[, 1, drop = FALSE],
+               scale = 1e-3 + tf$math$softplus(0.01 * x[, 2, drop = FALSE])
+               )
+    )
+
+yhats &lt;- purrr::map(1:100, function(x) model(tf$constant(x_test)))
+means &lt;-
+  purrr::map(yhats, purrr::compose(as.matrix, tfd_mean)) %&gt;% abind::abind()
+sds &lt;-
+  purrr::map(yhats, purrr::compose(as.matrix, tfd_stddev)) %&gt;% abind::abind()
+```
+
+
+---
+# Main challenge now is how to display ...
+
+Each line is one draw from the posterior weights; each line has its own standard deviation.
+
+&lt;figure&gt;
+    &lt;img src="both.png" width = "70%"&gt;
+&lt;/figure&gt;
+
+More background: https://blogs.rstudio.com/tensorflow/posts/2019-06-05-uncertainty-estimates-tfprobability/
+
+---
+class: inverse, middle, center
+
+
+
+
+# Other ways of modeling uncertainty with TFP
+
+
+---
+# Variational autoencoders: Informative latent codes
+
+&lt;figure&gt;
+    &lt;img src="vae.png" width = "80%"&gt;
+    &lt;figcaption&gt;Source: https://lilianweng.github.io/lil-log/2018/08/12/from-autoencoder-to-beta-vae.html&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+
+---
+# Variational autoencoders with tfprobability
+
+
+```r
+encoder_model &lt;- keras_model_sequential() %&gt;%
+  [...] %&gt;%
+  layer_multivariate_normal_tri_l(event_size = encoded_size) %&gt;%
+  # pass in the prior of your choice ...
+  # can use exact KL divergence or Monte Carlo approximation
+  layer_kl_divergence_add_loss([...])
+
+decoder_model &lt;- keras_model_sequential() %&gt;%
+  [...] %&gt;%
+ layer_independent_bernoulli([...])
+
+vae_model &lt;- keras_model(inputs = encoder_model$inputs,
+                         outputs = decoder_model(encoder_model$outputs[1]))
+vae_loss &lt;- function (x, rv_x) - (rv_x %&gt;% tfd_log_prob(x))
+```
+
+---
+# Monte Carlo approximations with tfprobability
+
+- used internally by TFP to perform approximate inference
+- `mcmc_`- kernels available to the user:
+
+&lt;figure&gt;
+    &lt;img src="mcmc.png" width = "105%"&gt;
+&lt;/figure&gt;
+
+---
+# Example: Modeling tadpole mortality (1)
+
+https://blogs.rstudio.com/tensorflow/posts/2019-05-06-tadpoles-on-tensorflow/
+
+Define a joint probability distribution:
+
+
+```r
+m2 &lt;- tfd_joint_distribution_sequential(
+  list(
+    tfd_normal(loc = 0, scale = 1.5),
+    tfd_exponential(rate = 1),
+    function(sigma, a_bar) 
+      tfd_sample_distribution(
+        tfd_normal(loc = a_bar, scale = sigma),
+        sample_shape = list(n_tadpole_tanks)
+      ), 
+    function(l)
+      tfd_independent(
+        tfd_binomial(total_count = n_start, logits = l),
+        reinterpreted_batch_ndims = 1
+      )))
+```
+
+---
+# Example: Modeling tadpole mortality (2)
+
+Define optimization target (loss) and kernel (algorithm):
+
+
+```r
+logprob &lt;- function(a, s, l)
+  m2 %&gt;% tfd_log_prob(list(a, s, l, n_surviving))
+
+hmc &lt;- mcmc_hamiltonian_monte_carlo(
+  target_log_prob_fn = logprob,
+  num_leapfrog_steps = 3,
+  step_size = 0.1,
+) %&gt;%
+  mcmc_simple_step_size_adaptation(
+    target_accept_prob = 0.8,
+    num_adaptation_steps = n_burnin
+  )
+```
+
+---
+# Example: Modeling tadpole mortality (3)
+
+&lt;br /&gt;
+
+Get starting values and sample:
+
+
+```r
+c(initial_a, initial_s, initial_logits, .) %&lt;-% (m2 %&gt;% tfd_sample(n_chain))
+
+run_mcmc &lt;- function(kernel) {
+  kernel %&gt;% mcmc_sample_chain(
+    num_results = n_steps,
+    num_burnin_steps = n_burnin,
+    current_state = list(initial_a, tf$ones_like(initial_s), initial_logits)
+  )
+res &lt;- hmc %&gt;% run_mcmc()
+```
+
+
+
+---
+# State space models
+
+
+Use variational inference or (Hamiltonian) Monte Carlo to
+
+- decompose
+
+- filter (as in: Kálmán filter)
+
+- smooth 
+
+- forecast
+
+_dynamic linear models_.
+
+Dynamic regression example: https://blogs.rstudio.com/tensorflow/posts/2019-06-25-dynamic_linear_models_tfprobability/
+
+
+---
+# Dynamic linear models: Filtering example
+
+&lt;figure&gt;
+    &lt;img src="capm_filtered.png" width = "100%"&gt;
+&lt;/figure&gt;
+
+---
+# Wrapping up
+
+&lt;br /&gt;
+
+- _tfprobability_ (TensorFlow Probability) - your toolbox for "everything Bayesian" 
+
+- Lots of ongoing development on the TFP side - stay tuned for cool additions :-)
+
+- Depending on your needs, pick what's most useful to you:
+
+ - Integration with deep learning (Keras layers)
+ 
+ - Monte Carlo Methods
+ 
+ - Dynamic linear models
+ 
+ __Thanks for listening!__
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
