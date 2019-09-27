@@ -71,22 +71,13 @@ But wait ... aren't there probabilities in there, _somewhere_?
 
 ```r
 library(magick)
-```
-
-```
-## Linking to ImageMagick 6.9.10.28
-## Enabled features: cairo, fontconfig, freetype, fftw, ghostscript, lcms, pango, rsvg, webp, x11
-## Disabled features:
-```
-
-```r
 # Attribution: Ben Tubby [CC BY 2.0 (https://creativecommons.org/licenses/by/2.0)]
 # https://upload.wikimedia.org/wikipedia/commons/3/30/Falkland_Islands_Penguins_35.jpg
 path &lt;- "penguin1.jpg" 
-image_read(path) %&gt;% image_resize("160")
+image_read(path) %&gt;% image_resize("140")
 ```
 
-&lt;img src="tfprobably-correct_files/figure-html/unnamed-chunk-1-1.png" width="213" /&gt;
+&lt;img src="tfprobably-correct_files/figure-html/unnamed-chunk-1-1.png" width="187" /&gt;
 
 ---
 # Let's ask the network ...
@@ -252,8 +243,8 @@ class: inverse, middle, center
 ```r
 devtools::install_github("rstudio/tfprobability")
 
-library(tensorflow)
-install_tensorflow()
+library(tfprobability)
+install_tfprobability()
 ```
 
 
@@ -610,12 +601,12 @@ Dynamic regression example: https://blogs.rstudio.com/tensorflow/posts/2019-06-2
 
 - Lots of ongoing development on the TFP side - stay tuned for cool additions :-)
 
+- Follow the blog for applications and background: https://blogs.rstudio.com/tensorflow/
+
 - Depending on your needs, pick what's most useful to you:
 
  - Integration with deep learning (Keras layers)
- 
  - Monte Carlo Methods
- 
  - Dynamic linear models
  
  __Thanks for listening!__
@@ -666,7 +657,24 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     deleted = true;
   });
-})();</script>
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {

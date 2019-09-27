@@ -69,7 +69,7 @@ library(magick)
 # Attribution: Ben Tubby [CC BY 2.0 (https://creativecommons.org/licenses/by/2.0)]
 # https://upload.wikimedia.org/wikipedia/commons/3/30/Falkland_Islands_Penguins_35.jpg
 path <- "penguin1.jpg" 
-image_read(path) %>% image_resize("160")
+image_read(path) %>% image_resize("140")
 ```
 
 ---
@@ -228,8 +228,8 @@ class: inverse, middle, center
 ```{r, eval=FALSE}
 devtools::install_github("rstudio/tfprobability")
 
-library(tensorflow)
-install_tensorflow()
+library(tfprobability)
+install_tfprobability()
 ```
 
 
@@ -448,7 +448,7 @@ class: inverse, middle, center
 ---
 # Variational autoencoders with tfprobability
 
-```{r}, eval=FALSE}
+```{r, eval=FALSE}
 encoder_model <- keras_model_sequential() %>%
   [...] %>%
   layer_multivariate_normal_tri_l(event_size = encoded_size) %>%
@@ -575,12 +575,12 @@ Dynamic regression example: https://blogs.rstudio.com/tensorflow/posts/2019-06-2
 
 - Lots of ongoing development on the TFP side - stay tuned for cool additions :-)
 
+- Follow the blog for applications and background: https://blogs.rstudio.com/tensorflow/
+
 - Depending on your needs, pick what's most useful to you:
 
  - Integration with deep learning (Keras layers)
- 
  - Monte Carlo Methods
- 
  - Dynamic linear models
  
  __Thanks for listening!__
