@@ -127,13 +127,13 @@ imagenet_decode_predictions(probs)
 # Stepping back: What's a neural network?
 
 
-<img src="playground.png" width = "70%"/>
+<img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/playground.png" width = "70%"/>
 
 ---
 # Zooming in: Weights and activations
 
 <figure>
-    <img src="perceptron.png" width = "60%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/perceptron.png" width = "60%">
     <figcaption>Source: https://en.wikipedia.org/wiki/Perceptron</figcaption>
 </figure>
 
@@ -151,7 +151,7 @@ model <- keras_model_sequential() %>%
 ```
 
 <figure>
-    <img src="relu.png" width = "60%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/relu.png" width = "60%">
     <figcaption><b>ReLU</b> activation</figcaption>
 </figure>
 
@@ -167,7 +167,7 @@ model <- keras_model_sequential() %>%
 ```
 
 <figure>
-    <img src="sigmoid.png" width = "60%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/sigmoid.png" width = "60%">
     <figcaption><b>Sigmoid</b> activation</figcaption>
 </figure>
 
@@ -182,10 +182,10 @@ model <- keras_model_sequential() %>%
 ```
 
 <figure>
-    <img src="softmax_pre.png" style = "float:left;" width= "50%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/softmax_pre.png" style = "float:left;" width= "50%">
 </figure>
 <figure>
-    <img src="softmax_post.png" style = "float:right;" width= "50%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/softmax_post.png" style = "float:right;" width= "50%">
 </figure>
 
 Before and after __softmax__ activation.
@@ -209,7 +209,7 @@ class: inverse, middle, center
 
 
 <figure>
-    <img src="weight_uncertainty.png" width = "120%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/weight_uncertainty.png" width = "120%">
     <figcaption>Blundell et al. (2015): Weight Uncertainty in Neural Networks</figcaption>
 </figure>
 
@@ -308,7 +308,7 @@ model %>% fit(
 # More distribution layers
 
 <figure>
-    <img src="distribution_layers.png" width = "100%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/distribution_layers.png" width = "100%">
     <figcaption>Complete list: <a href="https://rstudio.github.io/tfprobability/reference/index.html#section-keras-layers-distribution-layers">Distribution layers</a></figcaption>
 </figure>
 
@@ -347,7 +347,7 @@ sd <- yhat %>% tfd_stddev()
 ```
 
 <figure>
-    <img src="aleatoric.png" width = "80%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/aleatoric.png" width = "80%">
 </figure>
 
 ---
@@ -383,14 +383,14 @@ yhats <- purrr::map(1:100, function(x) model(tf$constant(x_test)))
 ```
 
 <figure>
-    <img src="epistemic.png" width = "80%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/epistemic.png" width = "80%">
 </figure>
 
 ---
 # Posterior weights are computed using variational inference
 
 <figure>
-    <img src="blei_vi.png" width = "80%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/blei_vi.png" width = "80%">
     <figcaption>Source: <a href="https://media.nips.cc/Conferences/2016/Slides/6199-Slides.pdf">David Blei, Rajesh Ranganath, Shakir Mohamed: Variational Inference:Foundations and Modern Methods. NIPS 2016 Tutorial·December 5, 2016.</a></figcaption>
 </figure>
 
@@ -422,7 +422,7 @@ sds <-
 Each line is one draw from the posterior weights; each line has its own standard deviation.
 
 <figure>
-    <img src="both.png" width = "70%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/both.png" width = "70%">
 </figure>
 
 More background: https://blogs.rstudio.com/tensorflow/posts/2019-06-05-uncertainty-estimates-tfprobability/
@@ -440,7 +440,7 @@ class: inverse, middle, center
 # Variational autoencoders: Informative latent codes
 
 <figure>
-    <img src="vae.png" width = "80%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/vae.png" width = "80%">
     <figcaption>Source: https://lilianweng.github.io/lil-log/2018/08/12/from-autoencoder-to-beta-vae.html</figcaption>
 </figure>
 
@@ -472,7 +472,7 @@ vae_loss <- function (x, rv_x) - (rv_x %>% tfd_log_prob(x))
 - `mcmc_`- kernels available to the user:
 
 <figure>
-    <img src="mcmc.png" width = "105%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/mcmc.png" width = "105%">
 </figure>
 
 ---
@@ -563,7 +563,7 @@ Dynamic regression example: https://blogs.rstudio.com/tensorflow/posts/2019-06-2
 # Dynamic linear models: Filtering example
 
 <figure>
-    <img src="capm_filtered.png" width = "100%">
+    <img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/capm_filtered.png" width = "100%">
 </figure>
 
 ---
