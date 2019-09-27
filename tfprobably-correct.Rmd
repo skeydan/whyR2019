@@ -64,13 +64,15 @@ But wait ... aren't there probabilities in there, _somewhere_?
 ---
 # Let's see an example!
 
-```{r}
+```{r, eval=FALSE}
 library(magick)
 # Attribution: Ben Tubby [CC BY 2.0 (https://creativecommons.org/licenses/by/2.0)]
 # https://upload.wikimedia.org/wikipedia/commons/3/30/Falkland_Islands_Penguins_35.jpg
 path <- "penguin1.jpg" 
 image_read(path) %>% image_resize("140")
 ```
+
+<img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/p1.png"/>
 
 ---
 # Let's ask the network ...
@@ -97,12 +99,14 @@ imagenet_decode_predictions(probs)
 ---
 # Let's do another one
 
-```{r}
+```{r, eval=FALSE}
 # Attribution: M. Murphy [Public domain]
 # https://upload.wikimedia.org/wikipedia/commons/2/22/RoyalPenguins3.JPG
 path <- "penguin2.jpg" 
 image_read(path) %>% image_resize("180")
 ```
+
+<img src="https://raw.githubusercontent.com/skeydan/whyR2019/master/p2.png"/>
 
 ---
 # So?
